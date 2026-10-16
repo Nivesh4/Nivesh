@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Session Management Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333333;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666666;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #dashboardView button {
+            background-color: #dc3545;
+            margin-top: 20px;
+        }
+
+        #dashboardView button:hover {
+            background-color: #bd2130;
+        }
+
+        .welcome-msg {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #28a745;
+        }
+        
+        .info-box {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 12px;
+            text-align: left;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- LOGIN VIEW -->
+        <div id="loginView">
+            <h2>User Login</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter any username" required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter any password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboardView" class="hidden">
+            <h2>Dashboard</h2>
+            <p class="welcome-msg">Welcome back, <strong id="displayUsername"></strong>!</p>
+            <p>You have successfully authorized access to this panel.</p>
+            
+            <div class="info-box">
+                <strong>Storage Info:</strong>
+                <p>• Local Storage: Persistent info</p>
+                <p>• Session Storage: Login runtime validation token</p>
+            </div>
+
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginView = document.getElementById('loginView');
+        const dashboardView = document.getElementById('dashboardView');
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const displayUsername = document.getElementById('displayUsername');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        /**
+         * Checks the authorization state of the session on page load.
+         * If tokens exist in both storages, directly route to the dashboard.
+         */
+        function checkSession() {
+            const storedUser = localStorage.getItem('app_username');
+            const sessionActive = sessionStorage.getItem('is_logged_in');
+
+            if (storedUser && sessionActive === 'true') {
+                showDashboard(storedUser);
+            } else {
+                showLogin();
+            }
+        }
+
+        /**
+         * Switches the interface view to show the Dashboard
+         */
+        function showDashboard(username) {
+            displayUsername.textContent = username;
+            loginView.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+        }
+
+        /**
+         * Switches the interface view to show the Login screen
+         */
+        function showLogin() {
+            loginView.classList.remove('hidden');
+            dashboardView.classList.add('hidden');
+            loginForm.reset();
+        }
+
+        // Handle Login Submission
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent standard page reload form behavior
+            
+            const username = usernameInput.value.trim();
+
+            // 1. Local Storage: Store user data permanently (until manually cleared)
+            localStorage.setItem('app_username', username);
+
+            // 2. Session Storage: Store runtime state tracking parameters (expires when tab closes)
+            sessionStorage.setItem('is_logged_in', 'true');
+
+            // Render Dashboard view
+            showDashboard(username);
+        });
+
+        // Handle Logout Action
+        logoutBtn.addEventListener('click', function() {
+            // Clear storage keys to prevent unauthorized persistent dashboard re-entry
+            localStorage.removeItem('app_username');
+            sessionStorage.removeItem('is_logged_in');
+
+            // Render Login view
+            showLogin();
+        });
+
+        // Initial security state synchronization check
+        checkSession();
+    </script>
+</body>
+</html>

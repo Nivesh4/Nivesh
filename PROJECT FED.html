@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sports League Management</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: #0f172a;
+    color: white;
+    padding: 25px;
+    text-align: center;
+}
+
+header p {
+    margin-top: 8px;
+    color: #94a3b8;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 25px auto;
+    padding: 15px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000d;
+    margin-bottom: 20px;
+}
+
+.stat-number {
+    font-size: 28px;
+    color: #2563eb;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+h2 {
+    margin-bottom: 15px;
+}
+
+input, button {
+    padding: 11px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    border: none;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.form-row input {
+    flex: 1;
+    min-width: 130px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 550px;
+}
+
+th, td {
+    padding: 13px;
+    text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.badge {
+    background: #dcfce7;
+    color: #166534;
+    padding: 5px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.delete-btn {
+    background: #dc2626;
+}
+
+.delete-btn:hover {
+    background: #b91c1c;
+}
+
+.match {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.score-input {
+    width: 65px;
+    margin: 3px;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+}
+
+@media (max-width: 600px) {
+    header { padding: 20px 10px; }
+    .container { padding: 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏆 Sports League Manager</h1>
+    <p>Manage Teams | Fixtures | Scores | League Standings</p>
+</header>
+
+<div class="container">
+
+<div class="stats">
+    <div class="card">
+        <p>Total Teams</p>
+        <div class="stat-number" id="teamCount">0</div>
+    </div>
+
+    <div class="card">
+        <p>Matches Played</p>
+        <div class="stat-number" id="playedCount">0</div>
+    </div>
+
+    <div class="card">
+        <p>Matches Remaining</p>
+        <div class="stat-number" id="remainingCount">0</div>
+    </div>
+
+    <div class="card">
+        <p>League Leader</p>
+        <div class="stat-number" id="leader">-</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>➕ Add New Team</h2>
+    <form id="teamForm" class="form-row">
+        <input id="teamName" type="text"
+        placeholder="Enter team name" required>
+        <button type="submit">Add Team</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>👥 Registered Teams</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Team Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="teamsTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>📅 League Fixtures</h2>
+    <p>Each pair of teams plays one match.</p>
+    <br>
+    <button onclick="createFixtures()">Generate Fixtures</button>
+    <div id="fixturesList" style="margin-top:15px">
+        <p>No fixtures yet. Generate fixtures to begin.</p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>📊 League Standings</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Team</th>
+                    <th>P</th>
+                    <th>W</th>
+                    <th>D</th>
+                    <th>L</th>
+                    <th>GD</th>
+                    <th>Pts</th>
+                </tr>
+            </thead>
+            <tbody id="standingsTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>🏆 League Champion</h2>
+    <p id="champion">
+        Complete all league matches to determine the champion.
+    </p>
+</div>
+
+</div>
+
+<footer>
+    Sports League Management System | Mini Project
+</footer>
+
+<script>
+let teams = [];
+let matches = [];
+let nextTeamId = 1;
+
+function addTeam(name) {
+    name = name.trim();
+
+    if (!name) {
+        alert("Please enter a team name.");
+        return;
+    }
+
+    if (teams.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+        alert("This team already exists.");
+        return;
+    }
+
+    teams.push({
+        id: nextTeamId++,
+        name,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        gf: 0,
+        ga: 0,
+        points: 0
+    });
+
+    matches = [];
+    render();
+}
+
+document.getElementById("teamForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    addTeam(document.getElementById("teamName").value);
+    document.getElementById("teamName").value = "";
+});
+
+function createFixtures() {
+    if (teams.length < 2) {
+        alert("Please add at least two teams.");
+        return;
+    }
+
+    if (matches.some(m => m.played)) {
+        alert("Fixtures cannot be regenerated after scores are recorded.");
+        return;
+    }
+
+    matches = [];
+
+    for (let i = 0; i < teams.length; i++) {
+        for (let j = i + 1; j < teams.length; j++) {
+            matches.push({
+                home: teams[i].id,
+                away: teams[j].id,
+                played: false,
+                homeScore: null,
+                awayScore: null
+            });
+        }
+    }
+
+    render();
+}
+
+function teamById(id) {
+    return teams.find(t => t.id === id);
+}
+
+function saveScore(index) {
+    const match = matches[index];
+
+    if (!match || match.played) return;
+
+    const homeInput = document.getElementById("home" + index);
+    const awayInput = document.getElementById("away" + index);
+
+    const homeScore = Number(homeInput.value);
+    const awayScore = Number(awayInput.value);
+
+    if (
+        homeInput.value.trim() === "" ||
+        awayInput.value.trim() === "" ||
+        !Number.isInteger(homeScore) ||
+        !Number.isInteger(awayScore) ||
+        homeScore < 0 || awayScore < 0
+    ) {
+        alert("Enter valid, non-negative whole-number scores.");
+        return;
+    }
+
+    const home = teamById(match.home);
+    const away = teamById(match.away);
+
+    home.played++;
+    away.played++;
+
+    home.gf += homeScore;
+    home.ga += awayScore;
+    away.gf += awayScore;
+    away.ga += homeScore;
+
+    if (homeScore > awayScore) {
+        home.won++;
+        away.lost++;
+        home.points += 3;
+    } else if (awayScore > homeScore) {
+        away.won++;
+        home.lost++;
+        away.points += 3;
+    } else {
+        home.drawn++;
+        away.drawn++;
+        home.points++;
+        away.points++;
+    }
+
+    match.played = true;
+    match.homeScore = homeScore;
+    match.awayScore = awayScore;
+
+    render();
+}
+
+function render() {
+    document.getElementById("teamCount").textContent = teams.length;
+
+    document.getElementById("playedCount").textContent =
+        matches.filter(m => m.played).length;
+
+    document.getElementById("remainingCount").textContent =
+        matches.filter(m => !m.played).length;
+
+    document.getElementById("teamsTable").innerHTML = teams.map((t, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHTML(t.name)}</td>
+            <td>
+                <button class="delete-btn"
+                    onclick="deleteTeam(${t.id})">Delete</button>
+            </td>
+        </tr>
+    `).join("");
+
+    document.getElementById("fixturesList").innerHTML =
+        matches.length ? matches.map((m, i) => {
+            const home = teamById(m.home);
+            const away = teamById(m.away);
+
+            return `
+                <div class="match">
+                    <div>
+                        <strong>${escapeHTML(home.name)}</strong>
+                        ${m.played
+                            ? `<span class="badge">${m.homeScore} - ${m.awayScore}</span>`
+                            : " vs "}
+                        <strong>${escapeHTML(away.name)}</strong>
+                    </div>
+                    ${m.played
+                        ? `<span class="badge">Completed</span>`
+                        : `<div>
+                            <input class="score-input" id="home${i}"
+                                type="number" min="0" step="1" placeholder="Home">
+                            -
+                            <input class="score-input" id="away${i}"
+                                type="number" min="0" step="1" placeholder="Away">
+                            <button onclick="saveScore(${i})">Save</button>
+                          </div>`}
+                </div>
+            `;
+        }).join("") : "<p>No fixtures yet. Generate fixtures to begin.</p>";
+
+    const sorted = [...teams].sort((a, b) =>
+        b.points - a.points ||
+        ((b.gf - b.ga) - (a.gf - a.ga)) ||
+        b.gf - a.gf ||
+        a.name.localeCompare(b.name)
+    );
+
+    document.getElementById("standingsTable").innerHTML =
+        sorted.map((t, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${escapeHTML(t.name)}</td>
+                <td>${t.played}</td>
+                <td>${t.won}</td>
+                <td>${t.drawn}</td>
+                <td>${t.lost}</td>
+                <td>${t.gf - t.ga}</td>
+                <td><strong>${t.points}</strong></td>
+            </tr>
+        `).join("");
+
+    const completed = matches.filter(m => m.played).length;
+    const allDone = matches.length > 0 && completed === matches.length;
+
+    document.getElementById("leader").textContent =
+        sorted.length && completed ? sorted[0].name : "-";
+
+    const champion = document.getElementById("champion");
+
+    if (allDone) {
+        const top = sorted[0];
+        const tied = sorted.filter(t =>
+            t.points === top.points &&
+            (t.gf - t.ga) === (top.gf - top.ga) &&
+            t.gf === top.gf
+        );
+
+        champion.textContent = tied.length > 1
+            ? "League tied between: " + tied.map(t => t.name).join(", ")
+            : "🏆 Champion: " + top.name;
+    } else {
+        champion.textContent =
+            "Complete all league matches to determine the champion.";
+    }
+}
+
+function deleteTeam(id) {
+    if (matches.some(m => m.played)) {
+        alert("Team deletion is disabled after match results are recorded.");
+        return;
+    }
+
+    if (!confirm("Delete this team?")) return;
+
+    teams = teams.filter(t => t.id !== id);
+    matches = [];
+    render();
+}
+
+function escapeHTML(value) {
+    return value.replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[c]);
+}
+
+render();
+</script>
+
+</body>
+</html>
